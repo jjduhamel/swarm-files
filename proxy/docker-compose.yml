@@ -1,0 +1,22 @@
+version: "3"
+networks:
+  default:
+    external:
+      name: proxy
+services:
+  haproxy:
+    image: dockercloud/haproxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 80:80
+      - 443:443
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+  nginx:
+    image: nginx
+    environment:
+      - VIRTUAL_HOST=swarm.*
+      - SERVICE_PORTS=80
