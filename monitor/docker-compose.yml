@@ -1,0 +1,43 @@
+version: "3.5"
+networks:
+  default:
+    external:
+      name: proxy
+configs:
+  filebeat-config:
+    file: ./filebeat/filebeat.yml
+  metricbeat-config:
+    file: ./metricbeat/metricbeat.yml
+services:
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:6.2.3
+    user: root
+    configs:
+      - source: filebeat-config
+        target: /usr/share/filebeat/filebeat.yml
+    volumes:
+      - /:/hostfs:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - ES_URL=http://elasticsearch:9200
+      - KIBANA_URL=http://kibana:5601
+    deploy:
+      mode: global
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:6.2.3
+    user: root
+    configs:
+      - source: metricbeat-config
+        target: /usr/share/metricbeat/metricbeat.yml
+    volumes:
+      - /:/hostfs:ro
+      - /proc:/hostfs/proc:ro
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - ES_URL=http://elasticsearch:9200
+      - KIBANA_URL=http://kibana:5601
+    deploy:
+      mode: global
